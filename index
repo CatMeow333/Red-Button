@@ -64,125 +64,86 @@
         .hidden {
             display: none;
         }
-        
-        #global-count {
-            font-size: 16px;
-            color: #333;
-            margin-top: 10px;
-        }
     </style>
 </head>
 <body>
     <div id="game-container">
         <h1>Красная кнопка</h1>
         <button id="button">НАЖМИ МЕНЯ</button>
-        <div id="pushes-count">Ваши нажатия: <span id="count">0</span></div>
-        <div id="global-count">Всего нажатий всеми игроками: <span id="total-count">0</span></div>
+        <div id="pushes-count">Нажатий: <span id="count">0</span></div>
         <div id="timer" class="hidden">Вы сможете нажать снова через: <span id="time-left">24:00:00</span></div>
     </div>
 
     <script>
-        // Константы
-        const COOLDOWN = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
-        const GITHUB_GIST_ID = '64293c360ffe639805934bcefe2747ed'; // Оставьте пустым для локальной версии
-        
-        // Элементы DOM
+        // Элементы страницы
         const button = document.getElementById('button');
         const countElement = document.getElementById('count');
-        const totalCountElement = document.getElementById('total-count');
         const timerElement = document.getElementById('timer');
         const timeLeftElement = document.getElementById('time-left');
         
-        // Состояние игры
+        // Состояние игры (загружаем из localStorage)
         let userId = localStorage.getItem('userId');
-        let userPushCount = parseInt(localStorage.getItem('userPushCount')) || 0;
-        let totalPushCount = parseInt(localStorage.getItem('totalPushCount')) || 0;
+        let pushCount = parseInt(localStorage.getItem('pushCount')) || 0;
         let lastPushTime = parseInt(localStorage.getItem('lastPushTime')) || 0;
-        let canPress = false;
+        const COOLDOWN = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
         
         // Инициализация игры
         function initGame() {
-            // Генерируем ID пользователя если нет
+            // Создаем ID пользователя, если его нет
             if (!userId) {
                 userId = 'user_' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem('userId', userId);
             }
             
-            // Загружаем данные
-            loadCounts();
+            // Показываем текущее количество нажатий
+            countElement.textContent = pushCount;
             
-            // Проверяем таймер
+            // Проверяем, можно ли нажимать кнопку
             checkCooldown();
-            
-            // Обновляем интерфейс
-            updateUI();
             
             // Проверяем таймер каждую секунду
             setInterval(checkCooldown, 1000);
         }
         
-        // Загружаем счетчики
-        function loadCounts() {
-            // В реальной игре здесь был бы запрос к серверу
-            // Для демо используем localStorage
-            
-            // Обновляем счетчики
-            countElement.textContent = userPushCount;
-            totalCountElement.textContent = totalPushCount;
-        }
-        
-        // Проверяем кулдаун
+        // Проверка времени до следующего нажатия
         function checkCooldown() {
-            const now = Date.now();
-            const timePassed = now - lastPushTime;
+            const currentTime = Date.now();
+            const timePassed = currentTime - lastPushTime;
             
             if (timePassed < COOLDOWN) {
-                canPress = false;
+                // Кнопка недоступна
                 button.disabled = true;
                 timerElement.classList.remove('hidden');
                 updateTimerDisplay(COOLDOWN - timePassed);
             } else {
-                canPress = true;
+                // Кнопка доступна
                 button.disabled = false;
                 timerElement.classList.add('hidden');
             }
         }
         
-        // Обновляем отображение таймера
+        // Обновление таймера
         function updateTimerDisplay(timeLeft) {
-            const hours = Math.floor((timeLeft / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((timeLeft / (1000 * 60)) % 60);
-            const seconds = Math.floor((timeLeft / 1000) % 60);
+            const hours = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
             
             timeLeftElement.textContent = 
                 `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         }
         
-        // Обновляем интерфейс
-        function updateUI() {
-            countElement.textContent = userPushCount;
-            totalCountElement.textContent = totalPushCount;
-        }
-        
         // Обработчик нажатия кнопки
         button.addEventListener('click', () => {
-            if (!canPress) return;
-            
-            // Обновляем время последнего нажатия
+            // Обновляем счетчик
+            pushCount++;
             lastPushTime = Date.now();
+            
+            // Сохраняем в localStorage
+            localStorage.setItem('pushCount', pushCount.toString());
             localStorage.setItem('lastPushTime', lastPushTime.toString());
             
-            // Увеличиваем счетчики
-            userPushCount++;
-            totalPushCount++;
-            localStorage.setItem('userPushCount', userPushCount.toString());
-            localStorage.setItem('totalPushCount', totalPushCount.toString());
-            
             // Обновляем интерфейс
-            updateUI();
-            
-            // Блокируем кнопку
-            canPress = false;
+            countElement.textContent = pushCount;
             button.disabled = true;
             timerElement.classList.remove('hidden');
             
@@ -191,9 +152,6 @@
             setTimeout(() => {
                 button.style.transform = 'scale(1)';
             }, 100);
-            
-            // В реальной игре здесь был бы запрос к серверу
-            // Для демо просто сохраняем в localStorage
         });
         
         // Запускаем игру
