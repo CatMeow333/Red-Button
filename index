@@ -84,7 +84,7 @@
     <script>
         // Константы
         const COOLDOWN = 24 * 60 * 60 * 1000; // 24 часа в миллисекундах
-        const GITHUB_GIST_ID = ''; // Оставьте пустым для локальной версии
+        const GITHUB_GIST_ID = '64293c360ffe639805934bcefe2747ed'; // Оставьте пустым для локальной версии
         
         // Элементы DOM
         const button = document.getElementById('button');
